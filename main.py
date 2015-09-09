@@ -352,6 +352,42 @@ class circuit(conductors, constants):
             radicand *= d
         GMR = radicand ** exponent
         return GMR
+    
+    def GMR_gen_coords(self, n, d=0):
+        '''
+        Generate as set of coordinates for n bundled conductors
+        seperateed by distance d (i.e. length of a 1 side of a polygon)
+        '''
+        pt1 = (0, 0)
+        pt2 = (d, 0)
+        coords = []
+        #assert n >= 1, "Not a valid number of conductors"
+        #assert isinstance(n, int), "Not a valid number of conductors (float)"
+        #assert d >= 0, "Not a valid distance between conductors"
+        #assert n >= 2 and d <= 0, "More than 1 conductor. Specify a seperation distance" 
+        # Single conductor case
+        if n == 1 or d <= 0:
+            coords += [pt1]
+        # Dual conductor case
+        elif n == 2:
+            coords += [pt1, pt2]
+        # n sided polygon case (>2 conductors)
+        elif n >= 3:
+            v0 = (d/2.0, d/2.0 * np.tan(np.pi/n)) # The centre point of the polygon
+            coords = coords + [tuple(np.subtract(pt1, v0))] + [tuple(np.subtract(pt2, v0))] # Offset the known edge/side
+            #coords = [pt1, pt2]
+            theta = 2.0 * np.pi / n # The angle two adjacent verices make at the origin
+            R_theta = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]] # The 2D rotation matrix
+            print("This is R_theta: ", R_theta)
+            print("This is v0: ", v0)
+            for side in range(n-2): # Minus 2 because we already have two points
+                print("This is the vertex: ", coords[side+1])
+                vertex = np.dot(R_theta, np.subtract(coords[side+1], v0))
+                coords.append(tuple(np.add(vertex, v0)))
+            coords[0] = tuple(np.subtract(pt1, v0))
+            #coords[1] = tuple(np.subtract(pt2, v0))
+        return coords
+#http://math.stackexchange.com/questions/1267646/finding-vertices-of-regular-polygon
 
 
 class arrangement(circuit, constants):
@@ -417,3 +453,5 @@ class arrangement(circuit, constants):
             radicand *= d
         GMR = radicand ** exponent
         return GMR
+            
+        
