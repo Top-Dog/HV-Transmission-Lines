@@ -354,6 +354,7 @@ class circuit(conductors, constants):
         return GMR
     
     def GMR_gen_coords(self, n, d=0):
+        #http://math.stackexchange.com/questions/1267646/finding-vertices-of-regular-polygon
         '''
         Generate as set of coordinates for n bundled conductors
         seperateed by distance d (i.e. length of a 1 side of a polygon)
@@ -373,21 +374,17 @@ class circuit(conductors, constants):
             coords += [pt1, pt2]
         # n sided polygon case (>2 conductors)
         elif n >= 3:
-            v0 = (d/2.0, d/2.0 * np.tan(np.pi/n)) # The centre point of the polygon
-            coords = coords + [tuple(np.subtract(pt1, v0))] + [tuple(np.subtract(pt2, v0))] # Offset the known edge/side
-            #coords = [pt1, pt2]
+            v0 = (d/2.0, d/( 2.0 * np.tan(np.pi/n))) # The centre point of the polygon (between pt1 and pt2)
+            coords = coords + [tuple(np.subtract(pt1, v0))] + [tuple(np.subtract(pt2, v0))] # Offset the known edge/side coords
             theta = 2.0 * np.pi / n # The angle two adjacent verices make at the origin
             R_theta = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]] # The 2D rotation matrix
-            print("This is R_theta: ", R_theta)
-            print("This is v0: ", v0)
             for side in range(n-2): # Minus 2 because we already have two points
-                print("This is the vertex: ", coords[side+1])
-                vertex = np.dot(R_theta, np.subtract(coords[side+1], v0))
-                coords.append(tuple(np.add(vertex, v0)))
-            coords[0] = tuple(np.subtract(pt1, v0))
-            #coords[1] = tuple(np.subtract(pt2, v0))
+                vertex = np.dot(R_theta, coords[side+1])
+                coords.append(tuple(vertex))
+            # This returns the coords to the original origin point - can be removed since we only care about GMD/GMR
+            for c in range(len(coords)):
+                coords[c] = tuple(np.add(v0, coords[c]))
         return coords
-#http://math.stackexchange.com/questions/1267646/finding-vertices-of-regular-polygon
 
 
 class arrangement(circuit, constants):
@@ -453,5 +450,24 @@ class arrangement(circuit, constants):
             radicand *= d
         GMR = radicand ** exponent
         return GMR
-            
-        
+    
+from sympy.solvers import solve
+from sympy import symbol
+
+def carson_infinite_seriesA(mode, *coords):
+    # unpack *coords
+    
+    if mode == "self":
+        theta = 0 # sin^-1(x_ij)/S_ij
+        k = 10e-3 * 4
+    elif mode == "mutual":
+        pass
+    else:
+        assert 0, "Not valid input"
+    return theta, k
+
+def carson_ininite_seriesB(theta, k):
+    '''The simplfied implmentation'''
+    P = np.pi / 8
+    Q = -0.0386 + 0.5*np.log(2/k)
+    return (P, Q)
